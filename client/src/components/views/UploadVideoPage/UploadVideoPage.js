@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Button, Form, Input, Icon, message } from 'antd';
 import axios from 'axios';
 
+//Redux
+import { useSelector } from 'react-redux';
+
 //https://github.com/react-dropzone/react-dropzone
 import Dropzone from 'react-dropzone';
 
@@ -23,7 +26,9 @@ const Category = [
 ]
 
 
-function UploadVideoPage() {
+function UploadVideoPage(props) {
+    //Redux
+    const user = useSelector(state => state.user);
 
     //define and initialize states
     const [title, setTitle] = useState("");
@@ -51,8 +56,38 @@ function UploadVideoPage() {
         setCategories(event.currentTarget.value);
     }
 
-    const onSubmit = () => {
+    const onSubmit = (event) => {
+        event.preventDefault();
 
+        if (user.userData && !user.userData.isAuth) {
+            return alert('Please log in first');
+        }
+
+        if (title === "" || Description === "" || Categories === ""
+            || FilePath === "" || Duration === "" || Thumbnail === "") {
+            return alert('Please fill all the fields');
+        }
+
+        const variables = {
+            writer: user.userData._id,
+            title: title,
+            description: Description,
+            privacy: privacy,
+            filePath: FilePath,
+            category: Categories,
+            duration: Duration,
+            thumbnail: Thumbnail
+        }
+
+        axios.post('/api/video/uploadVideo', variables)
+            .then(response => {
+                if (response.data.success) {
+                    alert('video Uploaded Successfully')
+                    props.history.push('/')
+                } else {
+                    alert('Failed to upload video')
+                }
+            })
     }
 
     const onDrop = (files) => {
